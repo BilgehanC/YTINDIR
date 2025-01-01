@@ -1,10 +1,17 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file
 from flask_cors import CORS
 import os
 import yt_dlp
 
 app = Flask(__name__)
 CORS(app)
+
+# Ana sayfa olarak index.html'i sun
+@app.route('/')
+def home():
+    return render_template('index.html')  # templates klasöründeki index.html dosyasını döndür
+
+
 
 @app.route('/download', methods=['POST'])
 def download_video():
@@ -37,11 +44,6 @@ def download_video():
         traceback.print_exc()
         return jsonify({'error': f'Failed to download video: {str(e)}'}), 500
 
-@app.route('/')
-def home():
-    return "YouTube Video Downloader API is running."
-
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))  # Render'ın PORT değişkenini al
-    app.run(host='0.0.0.0', port=port)       # 0.0.0.0 tüm IP'lerden erişim sağlar
-
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
