@@ -6,12 +6,9 @@ import yt_dlp
 app = Flask(__name__)
 CORS(app)
 
-# Ana sayfa olarak index.html'i sun
 @app.route('/')
 def home():
-    return render_template('index.html')  # templates klasöründeki index.html dosyasını döndür
-
-
+    return render_template('index.html')
 
 @app.route('/download', methods=['POST'])
 def download_video():
@@ -21,21 +18,25 @@ def download_video():
             return jsonify({'error': 'No URL provided'}), 400
 
         video_url = data['url']
-        download_dir = 'downloads'
+        download_dir = '/tmp/downloads'
 
-        # İndirme klasörünü oluştur
         if not os.path.exists(download_dir):
             os.makedirs(download_dir)
 
-        # yt-dlp ile video indirme
+        # Çerezleri dahil et
         ydl_opts = {
             'format': 'best',
-            'outtmpl': f'{download_dir}/%(title)s.%(ext)s'
+            'outtmpl': f'{download_dir}/%(title)s.%(ext)s',
+            'cookies': 'cookies.txt'  # Çerez dosyasını belirtin
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(video_url, download=True)
-            file_path = ydl.prepare_filename(info_dict)
+            try:
+                info_dict = ydl.extract_info(video_url, download=True)
+                file_path = ydl.prepare_filename(info_dict)
+            except Exception as e:
+                print(f"Download error: {e}")
+                return jsonify({'error': f'Failed to download video: {e}'}), 500
 
         return send_file(file_path, as_attachment=True)
 
@@ -45,5 +46,6 @@ def download_video():
         return jsonify({'error': f'Failed to download video: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
+    port = int(os.environ.get('PORT', 5000))
+    print(f"Server is running on port {port}")
     app.run(host='0.0.0.0', port=port)
