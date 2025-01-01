@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+</head>
+<body>
+    <h1>YouTube Video Downloader</h1>
+    <form id="downloadForm">
+        <label for="url">YouTube Video URL:</label>
+        <input type="text" id="url" name="url" placeholder="Enter YouTube URL" required>
+        <button type="submit">Download</button>
+    </form>
+    <div id="message"></div>
+
+    <script>
+        document.getElementById('downloadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = document.getElementById('url').value;
+
+            // Kullanıcıya bilgi mesajı göster
+            document.getElementById('message').textContent = "Downloading... Please wait.";
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url })
+                });
+
+                if (response.ok) {
+                    // İndirilen dosyayı kullanıcıya sun
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = "video.mp4"; // Varsayılan dosya adı
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    document.getElementById('message').textContent = "Download complete!";
+                } else {
+                    const error = await response.json();
+                    document.getElementById('message').textContent = `Error: ${error.error}`;
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('message').textContent = "An error occurred while downloading.";
+            }
+        });
+    </script>
+</body>
+</html>
